@@ -26,4 +26,10 @@ if [ "$changed" = "1" ]; then
     chown -R node:node /paperclip
 fi
 
+# Railway mounts volumes as root; ensure node can write to /paperclip
+# regardless of whether a UID remap was needed.
+if [ "$(stat -c %u /paperclip)" != "$(id -u node)" ]; then
+    chown -R node:node /paperclip
+fi
+
 exec gosu node "$@"
