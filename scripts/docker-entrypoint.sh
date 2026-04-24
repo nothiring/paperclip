@@ -22,14 +22,11 @@ if [ "$(id -g node)" -ne "$PGID" ]; then
     changed=1
 fi
 
-if [ "$changed" = "1" ]; then
-    chown -R node:node /paperclip
-fi
-
-# Railway mounts volumes as root; ensure node can write to /paperclip
-# regardless of whether a UID remap was needed.
-if [ "$(stat -c %u /paperclip)" != "$(id -u node)" ]; then
-    chown -R node:node /paperclip
-fi
+# Always recursively chown /paperclip on boot. Railway mounts volumes
+# as root, and any files written to the volume from a `railway ssh` session
+# (which runs as root) will also be root-owned. Fixing this every boot
+# keeps the node user able to read/write its instance dir regardless of
+# how files got there.
+chown -R node:node /paperclip
 
 exec gosu node "$@"
